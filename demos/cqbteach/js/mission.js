@@ -3,8 +3,17 @@ $(document).ready( function () {
 	var container,
 		camera, renderer, controls,
 		scene, man1, man2, man3;
-	var manLoadedNum = 0;
 	var clock = new THREE.Clock();
+	var man1Pos = new THREE.Vector3( 28.5, 0, 18.5 ),
+		man2Pos = new THREE.Vector3( 28, 0, 22),
+		man3Pos = new THREE.Vector3( 27, 0, 20),
+		man2EyePos = new THREE.Vector3(),
+		man1HeadPos = new THREE.Vector3();
+	man2EyePos.copy( man2Pos );
+	man2EyePos.y = 1.75;
+	man1HeadPos.copy( man1Pos );
+	man1HeadPos.y = 1.75;
+	var manLoadedNum = 0;
 
 	$( '#missionStage1Man2' ).click( function () {
 
@@ -20,15 +29,16 @@ $(document).ready( function () {
 		container = document.getElementById( '3dView' );
 
 		camera = new THREE.PerspectiveCamera( 60, container.clientWidth / container.clientHeight, 0.1, 200 );
-		camera.position.set( 0, 1.75, 0 );
+		camera.position.copy( man2EyePos );
 		camera.up.set( 0, 1, 0 );
+		camera.lookAt( man1HeadPos );
 
 		scene = new THREE.Scene();
 		scene.fog = new THREE.Fog( 0xcce0ff, 0, 100 );
 
 		scene.add( new THREE.AmbientLight( 0x666666 ) );
 
-		var light = new THREE.DirectionalLight( 0xffffff, 1.5 );
+		var light = new THREE.DirectionalLight( 0xffffff, 0.5 );
 		light.position.set( 1, 1, 1 ).normalize();
 		scene.add( light );
 
@@ -38,31 +48,22 @@ $(document).ready( function () {
 		renderer.setSize( container.clientWidth, container.clientHeight );
 		container.appendChild( renderer.domElement );
 
-		controls = new THREE.FirstPersonControls( camera, renderer.domElement );
-		controls.movementSpeed = 0;
-		controls.lookSpeed = 0.05;
-		controls.lookVertical = true;
-		controls.constrainVertical = true;
-		controls.verticalMin = Math.PI * 80 / 180;
-		controls.verticalMax = Math.PI * 100 / 180;
-		controls.lon = -90;
+		var loader = new THREE.ColladaLoader();
+		loader.options.convertUpAxis = true;
+		loader.options.upAxis = 'Y';
+		loader.load( './res/scene/scene.dae', function ( collada ) {
 
-		var texLoader = new THREE.TextureLoader();
-		var groundTexture = texLoader.load( './res/grasslight-big.jpg' );
-		groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
-		groundTexture.repeat.set( 30, 30 );
-		groundTexture.anisotropy = 16;
-		var mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 200, 200 ), new THREE.MeshLambertMaterial( { color: 0xffffff, map: groundTexture } ) );
-		mesh.position.y = 0;
-		mesh.rotation.x = - Math.PI / 2;
-		mesh.receiveShadow = true;
-		scene.add( mesh );
+			var model = collada.scene;
+			model.scale.set( 0.03, 0.03, 0.03 );
+			scene.add( model );
+
+		} );
 
 		man1 = new THREE.BlendCharacter();
 		man1.load( './res/marine/marine_anims_core.json', function () {
 
 			man1.scale.set( 0.01, 0.01, 0.01 );
-			man1.position.set( -1, 0, -3 );
+			man1.position.copy( man1Pos );
 			scene.add( man1 );
 
 			man1.applyWeight( 'idle', 1 );
@@ -83,8 +84,9 @@ $(document).ready( function () {
 		man2.load( './res/marine/marine_anims_core.json', function () {
 
 			man2.scale.set( 0.01, 0.01, 0.01 );
-			man2.position.set( 0, 0, 0 );
-			//scene.add( man2 );
+			man2.position.copy( man2Pos );
+			scene.add( man2 );
+			man2.visible = false;
 
 			man2.applyWeight( 'idle', 1 );
 			man2.applyWeight( 'walk', 0 );
@@ -104,7 +106,7 @@ $(document).ready( function () {
 		man3.load( './res/marine/marine_anims_core.json', function () {
 
 			man3.scale.set( 0.01, 0.01, 0.01 );
-			man3.position.set( 1, 0, -3 );
+			man3.position.copy( man3Pos );
 			scene.add( man3 );
 
 			man3.applyWeight( 'idle', 1 );
@@ -123,6 +125,15 @@ $(document).ready( function () {
 		} );	
 
 		window.addEventListener( 'resize', onWindowResize, false );
+		window.addEventListener( 'keyup', function( event ) {
+
+			if ( event.keyCode === 84 /*T*/ ) {
+
+				toggleControls();
+			
+			}
+		
+		});
 
 	}
 
@@ -134,12 +145,14 @@ $(document).ready( function () {
 		renderer.setSize( container.clientWidth, container.clientHeight );
 
 		controls.handleResize();
-
+		
 	}
 
 	function start() {
 
 		requestAnimationFrame( animate );
+
+		toggleControls();
 
 	}
 
@@ -156,6 +169,46 @@ $(document).ready( function () {
 		controls.update( delta );
 
 		renderer.render( scene, camera );
+
+	}
+
+	function toggleControls() {
+
+		if ( !!controls && controls instanceof THREE.FirstPersonControls ) {
+
+			controls.dispose();
+
+			controls = new THREE.OrbitControls( camera, renderer.domElement );
+			controls.target.copy( man1HeadPos );
+			controls.maxDistance = 20;
+			controls.maxPolarAngle = Math.PI / 2;
+
+			man2.visible = true;
+
+		} else {
+
+			if ( !!controls ) {
+
+				controls.dispose();
+
+			}
+
+			camera.position.copy( man2EyePos );
+			camera.up.set( 0, 1, 0 );
+			camera.lookAt( man1HeadPos );
+
+			controls = new THREE.FirstPersonControls( camera, renderer.domElement );
+			controls.movementSpeed = 0;
+			controls.lookSpeed = 0.05;
+			controls.lookVertical = true;
+			controls.constrainVertical = true;
+			controls.verticalMin = Math.PI * 80 / 180;
+			controls.verticalMax = Math.PI * 100 / 180;
+			controls.lon = -90;
+
+			man2.visible = false;
+
+		}
 
 	}
 
