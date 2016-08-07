@@ -13,7 +13,7 @@ $(document).ready( function () {
 	man2EyePos.y = 1.75;
 	man1HeadPos.copy( man1Pos );
 	man1HeadPos.y = 1.75;
-	var manLoadedNum = 0;
+	var loaded = 0, toBeLoaded = 0;
 
 	$( '#missionStage1Man2' ).click( function () {
 
@@ -57,29 +57,55 @@ $(document).ready( function () {
 			model.scale.set( 0.03, 0.03, 0.03 );
 			scene.add( model );
 
+			onload();
+
 		} );
+		toBeLoaded ++;
 
-		man1 = new THREE.BlendCharacter();
-		man1.load( './res/marine/marine_anims_core.json', function () {
+		loader.load( './res/man1/man1.dae', function ( collada ) {
 
-			man1.scale.set( 0.01, 0.01, 0.01 );
+			man1 = collada.scene;
+
+			man1.traverse( function ( child ) {
+
+				if ( child instanceof THREE.SkinnedMesh ) {
+
+					var animation = new THREE.Animation( child, child.geometry.animation );
+					animation.play();
+
+				}
+
+			} );
+
+			man1.rotateY( Math.PI * -90 / 180);
 			man1.position.copy( man1Pos );
+			man1.position.y -= 0.83;
+			man1.updateMatrix();
 			scene.add( man1 );
 
-			man1.applyWeight( 'idle', 1 );
-			man1.applyWeight( 'walk', 0 );
-			man1.applyWeight( 'run', 0 );
-
-			man1.play( 'idle', 1 );
-
-			manLoadedNum ++;
-			if ( manLoadedNum > 2 ) {
-
-				start();
-
-			}
+			onload();
 
 		} );
+		toBeLoaded ++;
+
+		// man1 = new THREE.BlendCharacter();
+		// man1.load( './res/marine/marine_anims_core.json', function () {
+
+		// 	man1.scale.set( 0.01, 0.01, 0.01 );
+		// 	man1.position.copy( man1Pos );
+		// 	scene.add( man1 );
+
+		// 	man1.applyWeight( 'idle', 1 );
+		// 	man1.applyWeight( 'walk', 0 );
+		// 	man1.applyWeight( 'run', 0 );
+
+		// 	man1.play( 'idle', 1 );
+
+		//	onload();
+
+		// } );
+		// toBeLoaded ++;
+
 		man2 = new THREE.BlendCharacter();
 		man2.load( './res/marine/marine_anims_core.json', function () {
 
@@ -94,14 +120,11 @@ $(document).ready( function () {
 
 			man2.play( 'idle', 1 );
 
-			manLoadedNum ++;
-			if ( manLoadedNum > 2 ) {
-
-				start();
-
-			}
+			onload();
 
 		} );
+		toBeLoaded ++;
+
 		man3 = new THREE.BlendCharacter();
 		man3.load( './res/marine/marine_anims_core.json', function () {
 
@@ -115,14 +138,10 @@ $(document).ready( function () {
 
 			man3.play( 'idle', 1 );
 
-			manLoadedNum ++;
-			if ( manLoadedNum > 2 ) {
-
-				start();
-
-			}
+			onload();
 			
-		} );	
+		} );
+		toBeLoaded ++;
 
 		window.addEventListener( 'resize', onWindowResize, false );
 		window.addEventListener( 'keyup', function( event ) {
@@ -148,11 +167,17 @@ $(document).ready( function () {
 		
 	}
 
-	function start() {
+	function onload() {
 
-		requestAnimationFrame( animate );
+		loaded ++;
 
-		toggleControls();
+		if ( loaded >= toBeLoaded ) {
+
+			requestAnimationFrame( animate );
+
+			toggleControls();
+
+		}
 
 	}
 
@@ -162,11 +187,13 @@ $(document).ready( function () {
 
 		var delta = clock.getDelta();
 
-		man1.update( delta );
+		//man1.update( delta );
 		man2.update( delta );
 		man3.update( delta );
 
 		controls.update( delta );
+
+		THREE.AnimationHandler.update( clock.getDelta() );
 
 		renderer.render( scene, camera );
 
