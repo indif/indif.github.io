@@ -37,7 +37,7 @@
             } else if (!Detector.webgl) {
                 Detector.addGetWebGLMessage();
             } else {
-                init('./model/' + modelname + '/' + modelname + '.assimp');
+                init('./model/' + modelname + '/' + modelname + '.assbin');
             }
 
             function getQuery(name) {
@@ -48,13 +48,23 @@
                 return null;
         　　}
 
+            function initCamera(box) {
+
+                var center = new THREE.Vector3();
+                box.getCenter(center);
+                var radius = box.getSize().length() * 0.5;
+                camera.position.set(0, radius * 5, 0);
+                camera.position.add(center);
+                camera.up.set( 0, 0, 1 );
+                camera.lookAt(center);
+
+                controls = new THREE.OrbitControls( camera, renderer.domElement );
+            }
+
             function init(modelurl) {
 
                 container = document.getElementById( 'container' );
-                camera = new THREE.PerspectiveCamera( 25, window.innerWidth / window.innerHeight, 1, 10000 );
-                camera.position.set( 600, 1150, 5 );
-                camera.up.set( 0, 0, 1 );
-                camera.lookAt( new THREE.Vector3( -100, 0, 0 ) );
+                camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
                 scene = new THREE.Scene();
 
@@ -71,18 +81,24 @@
                 renderer.setSize( window.innerWidth, window.innerHeight );
                 container.appendChild( renderer.domElement );
 
-                controls = new THREE.OrbitControls( camera, renderer.domElement );
-
                 var loader = new THREE.AssimpLoader();
                 loader.load(modelurl, function ( err, result ) {
 
-                    var object = result.object;
+                    if (result) {
 
-                    object.position.y = - 100;
-                    object.rotation.x = Math.PI / 2;
-                    scene.add( object );
+                        var object = result.object;
+                        if (object) {
 
-                    animation = result.animation;
+                            var boundingBox = new THREE.Box3();
+                            boundingBox.expandByObject(object);
+
+                            initCamera(boundingBox);
+
+                            object.rotation.x = Math.PI / 2;
+                            scene.add( object );
+                            animation = result.animation;
+                        }
+                    }
 
                 } );
 
