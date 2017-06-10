@@ -27,7 +27,7 @@ var options = {
 
     // 天地图全球影像服务
     imageryProvider: new Cesium.WebMapTileServiceImageryProvider({
-        url: "http://{s}.tianditu.com/img_c/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=c&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles",
+        url: "https://{s}.tianditu.com/img_c/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=c&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles",
         layer: "img",
         style: "default",
         format: "tiles",
@@ -38,7 +38,7 @@ var options = {
         tilingScheme: new Cesium.GeographicTilingScheme(),
         tileMatrixLabels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'],
         tileDiscardPolicy: new Cesium.DiscardMissingTileImagePolicy({
-            missingImageUrl: "http://t0.tianditu.com/img_c/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=c&TileMatrix=19&TileRow=0&TileCol=0&style=default&format=tiles",
+            missingImageUrl: "https://t0.tianditu.com/img_c/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=c&TileMatrix=19&TileRow=0&TileCol=0&style=default&format=tiles",
             pixelsToCheck: [new Cesium.Cartesian2(0, 0), new Cesium.Cartesian2(120, 140), new Cesium.Cartesian2(130, 160), new Cesium.Cartesian2(200, 50), new Cesium.Cartesian2(200, 200)],
             disableCheckIfAllPixelsAreTransparent: true
         })
@@ -70,7 +70,7 @@ viewer.scene.globe.depthTestAgainstTerrain = true;
 
 // 全球影像中文注记服务（叠加图层）
 viewer.imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
-    url: "http://{s}.tianditu.com/cia_c/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=c&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg",
+    url: "https://{s}.tianditu.com/cia_c/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=c&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg",
     layer: "cia",
     style: "default",
     format: "tiles",
